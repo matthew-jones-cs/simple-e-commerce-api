@@ -1,0 +1,1170 @@
+openapi: 3.1.0
+
+info:
+  title: Simple E-Commerce API
+  version: 1.0.0
+  description: API documentation for my Simple E-Commerce API
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://task-api-service-kbrx.onrender.com
+    description: Production development server
+  
+
+tags:
+  - name: Auth
+    description: User authentication endpoints
+  - name: Users
+    description: User related endpoints
+  - name: Items
+    description: Item related endpoints
+  - name: Orders
+    description: Order related endpoints
+  - name: Reviews
+    description: Review related endpoints
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Authenticate user
+      description: Authenticates a user and returns an access token.
+      requestBody:
+        description: User login credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthCredentials"
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "400":
+          $ref: "#/components/responses/InvalidUserInput"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                example:
+                  error: "Invalid credentials"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+          
+  /auth/signup:
+    post:
+      tags:
+        - Auth
+      summary: Signs a user up
+      description: User signup credentials
+      requestBody:
+        description: "The user body to create."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthSignUpCredentials"
+      responses:
+        "201":
+          description: New user successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/InvalidUserInput"
+        "409":
+          $ref: "#/components/responses/DuplicateUserEmail"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /users:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      summary: Gets all users
+      description: Retrieves a list of all users.
+      responses:
+        "200":
+          description: A list of all users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Users"
+  /users/me:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      summary: Gets the user loged in
+      description: Retrieves the current user.
+      responses:
+        "200":
+          description: The current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      summary: Update the logged in user
+      description: Updates a single user
+      requestBody:
+        description: The user object to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthSignUpCredentials"
+      responses:
+        "200":
+          description: Sucessful update of a user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/InvalidUserInput" #change later so it is correct
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      summary: Delete the logged in user
+      description: Deletes a single user
+      responses:
+        "204":
+          description: User deleted successfully
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /users/{id}/role:
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Users
+      summary: Updates the role and what ever else of any user
+      description: Updates the any parts of a user
+      requestBody:
+        description: The user object to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthSignUpCredentials"
+      responses:
+        "200":
+          description: Sucessful update of a user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/InvalidUserInput" #change later so it is correct
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /items:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Items
+      summary: Makes a new item
+      description: Creates a new item.
+      requestBody:
+        description: The new Item
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Item"
+      responses:
+        "201":
+          description: The new item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/InvalidItemInput"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Unauthorized"
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Items
+      summary: Gets all items
+      description: Retrieves all items.
+      responses:
+        "200":
+          description: All items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Items"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /items/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Items
+      summary: Get an item by ID
+      description: Retrieves a single item by its ID.
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "200":
+          description: A single item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"  
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Items
+      summary: Updates a single item by ID
+      description: Updates a single item.
+      requestBody:
+        description: The user item to update.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Item"
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "200":
+          description: The updated item
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Item"
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Items
+      summary: Deletes a single item by id
+      description: Deletes an item.
+      parameters:
+        - $ref: "#/components/parameters/ItemId"
+      responses:
+        "204":
+          description: The item was deleted
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /orders:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Orders
+      summary: Makes a new order
+      description: Creates a new order.
+      requestBody:
+        description: Order body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderReq"  ################### redo
+      responses:
+        "201":
+          description: The new order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/InvalidItemInput" # fix later
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/ItemsDoNotExist"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"  
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Orders
+      summary: Gets all orders
+      description: Retrieves all orders.
+      responses:
+        "200":
+          description: All orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Orders"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound" # this might not be needed
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /orders/{id}:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Orders
+      summary: Gets an order by ID
+      description: Retrieves a single order by its ID.
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: A single order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order" #make this one
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref : "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound" #need to add
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Orders
+      summary: Deletes a single order by id
+      description: Deletes an order.
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "204":
+          description: The order was deleted
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound" #need to make
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /orders/{id}/items:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Orders
+      summary: Gets an order (with its order items) by ID
+      description: Retrieves an order (with its order items) by ID.
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+      responses:
+        "200":
+          description: A single order with its items
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderWithItems" #make this one
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound" #need to add
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /orders/{id}/{itemId}:
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Orders
+      summary: Updates a single order item of an order by two IDs
+      description: Updates a single item.
+      parameters:
+        - $ref: "#/components/parameters/OrderId"
+        - $ref: "#/components/parameters/OrderItemId"
+      requestBody:
+        description: Order body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderWithItem"
+      responses:
+        "200":
+          description: The order item of the order was updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderWithItem" # might need to be a different schema
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /reviews:
+    post:
+      security:
+        - bearerAuth: []
+      tags:
+        - Reviews
+      summary: Makes a new review
+      description: Creates a new review.
+      requestBody:
+        description: Review body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewBody"
+      responses:
+        "201":
+          description: The new review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+        "400":
+          $ref: "#/components/responses/InvalidItemInput" # fix later
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    get:
+      tags:
+        - Reviews
+      summary: Gets all reviews
+      description: Retrieves all reviews.
+      responses:
+        "200":
+          description: All reviews
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reviews"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /reviews/{id}:
+    get:
+      tags:
+        - Reviews
+      summary: Gets a review by ID
+      description: Retrieves a single review by its ID.
+      parameters:
+        - $ref: "#/components/parameters/ReviewId"
+      responses:
+        "200":
+          description: A single review
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"      # make a schema that is one review
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "404":
+          $ref: "#/components/responses/NotFound" #need to add
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    put:
+      security:
+        - bearerAuth: []
+      tags:
+        - Reviews
+      summary: Updates a single review by ID
+      description: Updates a single review.
+      parameters:
+        - $ref: "#/components/parameters/ReviewId"
+      requestBody:
+        description: Review body
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewBody"
+      responses:
+        "200":
+          description: The review was updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review" # might need to be a different schema
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    delete:
+      security:
+        - bearerAuth: []
+      tags:
+        - Reviews
+      summary: Deletes a single review by id
+      description: Deletes a review.
+      parameters:
+        - $ref: "#/components/parameters/ReviewId"
+      responses:
+        "204":
+          description: The review was deleted
+        "400":
+          $ref: "#/components/responses/InvalidId" # fix latter
+        "401":
+          $ref: "#/components/responses/Unauthenticated" 
+        "403":
+          $ref: "#/components/responses/Unauthorized" # this is for ownership of the review
+        "404":
+          $ref: "#/components/responses/NotFound" #need to make
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /reviews/me:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Reviews
+      summary: Gets all the reviews of the user loged in
+      description: Retrieves all the reviews of the current user.
+      responses:
+        "200":
+          description: The reviews of the current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MyReviews"   # need to make one for reviews of just this user
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"   ### there should be no 404 error for /me
+
+
+components:
+  schemas:
+    AuthSignUpCredentials:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role: #need to make this optional
+          type: string
+        address:
+          type: string
+      example:
+        name: "Bob"
+        email: "user@example.com"
+        password: "password123"
+        role: "USER"
+        address: "123 Bob Lane"
+    AuthCredentials:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      example:
+        email: "kateyr@example.com"
+        password: "11qq22ww33ee"
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: "Bob"
+        email:
+          type: string
+          example: "Bob@example.com"
+        role:
+          type: string
+          example: "USER"
+        address:
+          type: string
+          example: "123 Yard Lane"
+        createdAt:
+          type: string
+          readOnly: true
+          example: "2026-03-04T20:30:00Z"
+    Users:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        address:
+          type: string
+        createdAt:
+          type: string
+          readOnly: true
+      example:
+        - id: 1
+          name: "Bob"
+          email: "Bob@example.com"
+          role: "USER"
+          address: "123 Yard Lane"
+          createdAt: "2026-03-04T20:30:00Z"
+        - id: 2
+          name: "Steve"
+          email: "Steve@example.com"
+          role: "USER"
+          address: "127 Paper Lane"
+          createdAt: "2026-03-04T20:30:00Z"
+        - id: 3
+          name: "Jimmy L"
+          email: "Jimmy@example.com"
+          role: "SELLER"
+          address: "92 Park Lane"
+          createdAt: "2026-03-04T20:30:00Z"     
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        seller_id:
+          type: integer
+          readOnly: true
+          example: 1
+        name:
+          type: string
+          example: "Stick"
+        price:
+          type: number
+          format: double
+          example: 10.99
+        amount:
+          type: integer
+          example: 50
+        description:
+          type: string
+          example: "This is a stick being sold for $10.99. A good deal right?"
+        createdAt:
+          type: string
+          readOnly: true
+          example: "2026-03-04T20:30:00Z"
+    Items:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        seller_id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+        price:
+          type: number
+          format: double
+        amount:
+          type: integer
+        description:
+          type: string
+        createdAt:
+          type: string
+          readOnly: true
+      example:
+        - id: 1
+          seller_id: 1
+          name: "Stick"
+          price: 10.99
+          amount: 50
+          description: "This is a stick being sold for $10.99. A good deal right?"
+          createdAt: "2026-03-04T20:30:00Z"
+        - id: 2
+          seller_id: 1
+          name: "Big Stick"
+          price: 17.99
+          amount: 25
+          description: "This is a BIG stick being sold for $17.99. Thats a steal!"
+          createdAt: "2026-03-04T20:30:00Z"
+        - id: 3
+          seller_id: 2
+          name: "Ball"
+          price: 2.73
+          amount: 1000
+          description: "WHo wants a ball?"
+          createdAt: "2026-03-04T20:30:00Z"
+    Order:        ########################### I might need to red o this one 
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        buyer_id:
+          type: integer
+          readOnly: true
+          example: 1
+        createdAt:
+          type: string
+          readOnly: true
+          example: "2026-03-04T20:30:00Z"
+    Orders:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        buyer_id:
+          type: integer
+          readOnly: true
+        createdAt:
+          type: string
+          readOnly: true
+      example:
+        - id: 1
+          buyer_id: 1
+          created_at: "2026-03-04T20:30:00Z"
+        - id: 2
+          buyer_id: 1
+          created_at: "2026-03-04T20:30:00Z"
+        - id: 3
+          buyer_id: 2
+          created_at: "2026-03-04T20:30:00Z"
+    OrderWithItem: # this has a single item
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        order_id:
+          type: integer
+          readOnly: true
+          example: 1
+        item_id:
+          type: integer
+          readOnly: true
+          example: 1
+        buyer_id:
+          type: integer
+          readOnly: true
+          example: 1
+        quantity:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          readOnly: true
+          example: "2026-03-04T20:30:00Z"
+    OrderWithItems: # this has a single item
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        order_id:
+          type: integer
+          readOnly: true
+        item_id:
+          type: integer
+          readOnly: true
+        buyer_id:
+          type: integer
+          readOnly: true
+        quantity:
+          type: integer
+        createdAt:
+          type: string
+          readOnly: true
+      example:
+        - id: 1
+          order_id: 1
+          item_id: 1
+          buyer_id: 1
+          quantity: 12
+          createdAt: "2026-03-04T20:30:00Z"
+        - id: 2
+          order_id: 1
+          item_id: 2
+          buyer_id: 1
+          quantity: 5
+          createdAt: "2026-03-04T20:30:00Z"
+        - id: 3
+          order_id: 1
+          item_id: 3
+          buyer_id: 1
+          quantity: 1
+          createdAt: "2026-03-04T20:30:00Z"
+    OrderReq: # this has a single item
+      type: object
+      properties:
+        itemIds:
+          type: array
+        quantites:
+          type: array
+      example:
+        itemIds: [1, 2]
+        quantites: [3, 2]
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+          example: 1
+        author_id:
+          type: integer
+          readOnly: true
+          example: 1
+        item_id:
+          type: integer
+          readOnly: true
+          example: 1
+        title:
+          type: string
+          example: "This is the title of a review"
+        content:
+          type: string
+          example: "This is the content of a review"
+        rating:
+          type: integer
+          example: "Five"
+        createdAt:
+          type: string
+          readOnly: true
+          example: "2026-03-04T20:30:00Z"
+    ReviewBody:
+      type: object
+      properties:
+        itemId:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "This is the title of a review"
+        content:
+          type: string
+          example: "This is the content of a review"
+        rating:
+          type: integer
+          example: "Five"
+    Reviews:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author_id:
+          type: integer
+          readOnly: true
+        item_id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        content:
+          type: string
+        rating:
+          type: integer
+        createdAt:
+          type: string
+          readOnly: true
+      example:
+        - id: 1
+          author_id: 1
+          item_id: 1
+          title: "This is the title of review 1"
+          content: "This is the content of a review"
+          rating: 5
+          created_at: "2026-03-04T20:30:00Z"
+        - id: 2
+          author_id: 2
+          item_id: 1
+          title: "This is the title of review 2"
+          content: "This is the content of a review"
+          rating: 5
+          created_at: "2026-03-04T20:30:00Z"
+        - id: 3
+          author_id: 4
+          item_id: 2
+          title: "This is the title of review 3"
+          content: "This is the content of a review"
+          rating: 5
+          created_at: "2026-03-04T20:30:00Z"
+    MyReviews:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        author_id:
+          type: integer
+          readOnly: true
+        item_id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+        content:
+          type: string
+        rating:
+          type: integer
+        createdAt:
+          type: string
+          readOnly: true
+      example:
+        - id: 1
+          author_id: 1
+          item_id: 1
+          title: "This is the title of review 1"
+          content: "This is the content of a review"
+          rating: "Five"
+          created_at: "2026-03-04T20:30:00Z"
+        - id: 2
+          author_id: 1
+          item_id: 2
+          title: "This is the title of review 2"
+          content: "This is the content of a review"
+          rating: "Five"
+          created_at: "2026-03-04T20:30:00Z"
+        - id: 3
+          author_id: 1
+          item_id: 2
+          title: "This is the title of review 3"
+          content: "This is the content of a review"
+          rating: "Five"
+          created_at: "2026-03-04T20:30:00Z"
+  parameters:
+    ItemId:
+      name: id
+      in: path
+      required: true
+      description: Item ID
+      schema:
+        type: integer
+        example: 1
+    OrderId:
+      name: id
+      in: path
+      required: true
+      description: Order ID
+      schema:
+        type: integer
+        example: 2
+    OrderItemId:
+      name: itemId
+      in: path
+      required: true
+      description: Order item ID
+      schema:
+        type: integer
+        example: 1
+    ReviewId:
+      name: id
+      in: path
+      required: true
+      description: Review item ID
+      schema:
+        type: integer
+        example: 3
+  responses:
+    Unauthenticated:
+      description: Client is not authenticated
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: "Not authenticated. Please provide a valid token."
+    DuplicateUserEmail:
+      description: Conflict due to duplicate email already existing
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: "Email has already been used"
+    InvalidUserInput:
+      description: Bad request due to invalid data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              errors:
+                type: array
+                items:
+                  type: string
+            example:
+              errors:
+                - "Password is required"
+    TooManyRequests:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              errors:
+                - "Too many requests"
+    Unauthorized:
+      description: Client is not authorized
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: "Forbidden: insufficient permission."
+    InvalidItemInput:
+      description: Bad request due to invalid data
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: array
+                items:
+                  type: string
+            example:
+              errors:
+                - "Email must be in email format"
+    InvalidId:
+      description: Bad request due to an invalid ID
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: "ID must be greater than or equal to 1, and exist"
+    NotFound:
+      description: Could not be found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: "Not Found"
+    ItemsDoNotExist:
+      description: Items could not be found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+            example:
+              error: "Not all items referenced exist"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
