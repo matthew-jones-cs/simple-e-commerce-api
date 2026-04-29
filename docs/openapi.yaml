@@ -8,7 +8,7 @@ info:
 servers:
   - url: http://localhost:3000/api
     description: Local development server
-  - url: https://simple-e-commerce-api-8n2g.onrender.com
+  - url: https://simple-e-commerce-api-8n2g.onrender.com/api
     description: Production development server
   
 
